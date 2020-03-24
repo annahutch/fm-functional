@@ -149,6 +149,10 @@ full_mean_plot
 
 ---
 
+#### Quantiles of maximum absolute Z score in the region
+
+---
+
 ```{r warning = FALSE, message=FALSE, comment = FALSE, echo = FALSE, fig.width = 10, fig.height = 7}
 quantiles_high <- within(res[which(res$ld=="high"),], quantile <- as.integer(cut(max_Z, quantile(max_Z, probs=0:5/5), include.lowest=TRUE)))
 
