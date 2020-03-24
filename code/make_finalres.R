@@ -1,0 +1,46 @@
+# code to make fullres.RDS file for figs
+
+library(dplyr)
+library(data.table)
+
+iCVs <- readRDS("summary_res.RDS")
+setwd("/PAINTOR_V3.0/OutDirectory")
+
+files <- list.files(pattern="*.results",full=TRUE)
+
+res_log <- lapply(files, function(ch) grep("Log", ch))
+# which vectors contain "Log"
+res_log <- sapply(res_log, function(x) length(x) > 0)
+
+# remove those that arent proper result files
+files_final <- files[!res_log]
+
+matches <- regmatches(files_final, gregexpr("[[:digit:]]+", files_final))
+
+locus <- as.numeric(unlist(lapply(matches, function(x) x[1])))
+
+prop <- as.numeric(paste0(unlist(lapply(matches, function(x) x[2])),".",unlist(lapply(matches, function(x) x[3]))))
+
+RES <- lapply(files_final, function(x) read.table(x, header = TRUE))
+
+PPs <- rep(NA, length(RES))
+ranks <- rep(NA, length(RES))
+ld <- rep(NA, length(RES))
+OR <- rep(NA, length(RES))
+NN <- rep(NA, length(RES))
+max_Z <- rep(NA, length(RES))
+
+for(i in 1:length(RES)){
+  PPs[i] <- RES[[i]]$Posterior_Prob[iCVs[which(iCVs$locus==locus[i]),]$iCV]
+  ranks[i] <- rank(-RES[[i]]$Posterior_Prob)[iCVs[which(iCVs$locus==locus[i]),]$iCV]
+  ld[i] <- iCVs[which(iCVs$locus==locus[i]),]$ld
+  OR[i] <- iCVs[which(iCVs$locus==locus[i]),]$OR
+  NN[i] <- iCVs[which(iCVs$locus==locus[i]),]$NN
+  max_Z[i] <- iCVs[which(iCVs$locus==locus[i]),]$max_Z
+} 
+
+res <- data.frame(locus, prop, PPs, ranks, ld, OR, NN, max_Z)
+
+# res_final <- res[-which(res$PPs==1 & res$ranks != 1),]
+
+saveRDS(res, "fullres.RDS")

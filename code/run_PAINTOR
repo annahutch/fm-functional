@@ -1,0 +1,11 @@
+#!/bin/bash
+
+for i in ./RunDirectory/input.file*
+do
+  substr=${i#*file}
+  file=${i#*RunDirectory/}
+  echo infile:$file
+  echo outfile:results$substr 
+  ./PAINTOR -input RunDirectory/$file -in RunDirectory/ -out OutDirectory/ -Zhead ZSCORE -LDname ld -enumerate 1 -annotations annot -RESname results$substr
+done
+
