@@ -98,17 +98,19 @@ plot_grid(title_one, plot_one, ncol=1, rel_heights=c(0.05, 1)) # rel_heights val
 ---
 
 ```{r warning = FALSE, message=FALSE, comment = FALSE, echo = FALSE, fig.width = 10, fig.height = 7}
+se <- function(x) sd(x)/sqrt(length(x))
+
 new.df_low <- res[which(res$ld=="low"),] %>%
   group_by(prop, OR, NN) %>%
-  summarise(PP_mean = mean(PPs), PP_median = median(PPs))
+  summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
 
 new.df_med <- res[which(res$ld=="medium"),] %>%
   group_by(prop, OR, NN) %>%
-  summarise(PP_mean = mean(PPs), PP_median = median(PPs))
+  summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
 
 new.df_high <- res[which(res$ld=="high"),] %>%
   group_by(prop, OR, NN) %>%
-  summarise(PP_mean = mean(PPs), PP_median = median(PPs))
+  summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
 
 median_low <- ggplot(new.df_low, aes(x = prop, y = PP_median, col = OR, linetype = NN, group = interaction(OR,NN)))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD")+ theme(legend.position = "none")+ ylab("Median PP at CV")
 
@@ -130,11 +132,14 @@ full_median_plot
 ---
 
 ```{r warning = FALSE, message=FALSE, comment = FALSE, echo = FALSE, fig.width = 10, fig.height = 7}
-mean_low <- ggplot(new.df_low, aes(x = prop, y = PP_mean, col = OR, linetype = NN, group = interaction(OR,NN)))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD")+ theme(legend.position = "none")+ ylab("Mean PP at CV")
+mean_low <- ggplot(new.df_low, aes(x = prop, y = PP_mean, col = OR, linetype = NN, group = interaction(OR,NN)))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD")+ theme(legend.position = "none")+ ylab("Mean PP at CV +/- 1.96 * SE")+ 
+  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA)
 
-mean_med <- ggplot(new.df_med, aes(x = prop, y = PP_mean, col = OR, linetype = NN, group = interaction(OR,NN)))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD")+ theme(legend.position = "none")+ ylab("")
+mean_med <- ggplot(new.df_med, aes(x = prop, y = PP_mean, col = OR, linetype = NN, group = interaction(OR,NN)))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD")+ theme(legend.position = "none")+ ylab("")+ 
+  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA)
 
-mean_high <- ggplot(new.df_high, aes(x = prop, y = PP_mean, col = OR, linetype = NN, group = interaction(OR,NN)))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD") + ylab("")
+mean_high <- ggplot(new.df_high, aes(x = prop, y = PP_mean, col = OR, linetype = NN, group = interaction(OR,NN)))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD") + ylab("")+ 
+  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA)
 
 mean_plot <- plot_grid(mean_low+ coord_cartesian(ylim = c(0,1)), mean_med+ coord_cartesian(ylim = c(0,1)), mean_high+ coord_cartesian(ylim = c(0,1))+ theme(legend.position = "none"), nrow =1)
 
@@ -162,15 +167,15 @@ quantiles_low <- within(res[which(res$ld=="low"),], quantile <- as.integer(cut(m
 
 new.df_low <- quantiles_low %>%
   group_by(prop, quantile) %>%
-  summarise(PP_mean = mean(PPs), PP_median = median(PPs))
+  summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
 
 new.df_med <- quantiles_med %>%
   group_by(prop, quantile) %>%
-  summarise(PP_mean = mean(PPs), PP_median = median(PPs))
+  summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
 
 new.df_high <- quantiles_high %>%
   group_by(prop, quantile) %>%
-  summarise(PP_mean = mean(PPs), PP_median = median(PPs))
+  summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
 
 new.df_low$quantile <- as.factor(new.df_low$quantile)
 new.df_med$quantile <- as.factor(new.df_med$quantile)
@@ -195,11 +200,14 @@ plot_grid(quantile_plot, legend, rel_widths = c(3, .5))
 ---
 
 ```{r warning = FALSE, message=FALSE, comment = FALSE, echo = FALSE, fig.width = 10, fig.height = 7}
-high_mean <- ggplot(new.df_high, aes(x = prop, y = PP_mean, col = quantile, group = quantile))+geom_line() + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD") + ylab("")+ theme(legend.position = "none")
+high_mean <- ggplot(new.df_high, aes(x = prop, y = PP_mean, col = quantile, group = quantile))+geom_line() + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD") + ylab("")+ theme(legend.position = "none")+ 
+  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA)
 
-low_mean <- ggplot(new.df_low, aes(x = prop, y = PP_mean, col = quantile, group = quantile))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD")+ ylab("Mean PP at CV")+ theme(legend.position = "none")
+low_mean <- ggplot(new.df_low, aes(x = prop, y = PP_mean, col = quantile, group = quantile))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD")+ ylab("Mean PP at CV +/- 1.96 * SE")+ theme(legend.position = "none")+ 
+  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA)
 
-med_mean <- ggplot(new.df_med, aes(x = prop, y = PP_mean, col = quantile, group = quantile))+geom_line() + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD")+ ylab("")
+med_mean <- ggplot(new.df_med, aes(x = prop, y = PP_mean, col = quantile, group = quantile))+geom_line() + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD")+ ylab("")+ 
+  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA)
 
 quantile_plot <- plot_grid(low_mean + coord_cartesian(ylim = c(0,1)), med_mean + theme(legend.position = "none")+ coord_cartesian(ylim = c(0,1)), high_mean+ coord_cartesian(ylim = c(0,1)), nrow = 1)
 
