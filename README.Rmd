@@ -56,6 +56,8 @@ x <- readRDS("res/fullres.RDS")
 
 x$prop <- as.factor(x$prop)
 
+se <- function(x) sd(x)/sqrt(length(x))
+
 quantiles_low <- within(x[which(x$ld == "low"),], quantile <- as.integer(cut(max_Z, quantile(max_Z, probs=0:5/5), include.lowest=TRUE)))
 
 quantiles_low_values <- quantile(x[which(x$ld == "low"),"max_Z"], probs=0:5/5)

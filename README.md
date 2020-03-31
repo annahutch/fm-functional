@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------
 
-Investigate how useful incorporating functional annotation data is for
+Investigate the utility of incorporating functional annotation data for
 fine-mapping causal variants using PAINTOR.
 
 ------------------------------------------------------------------------
@@ -13,18 +13,16 @@ fine-mapping causal variants using PAINTOR.
 
 ------------------------------------------------------------------------
 
-Z score vectors from GWASs that vary in (i) LD of the region, (ii) OR at
-the CV (1.05, 1.1, 1.2) and (iii) sample sizes (2K, 5K or 10K cases and
-controls) are simulated. Corresponding binary annotation vectors are
-also simulated, whereby the annotation mark is randomly present (=1) in
-5% of the SNPs in each simulation.
+Simulate loci that reach genome-wide significance and corresponding
+binary annotation vectors, where 5% of the SNPs are randomly allocated
+the annotation.
 
-PAINTOR is run on various combinations of the simulated loci and the
-proportion of CVs with the annotation present (=1) is recorded. The
+Run PAINTOR on various combinations of the simulated loci, where the
+proportion of CVs with the annotation varies across combinations. The
 annotation is uninformative in combinations where the annotation is
 present in 5% of the CVs (as this is its proportion genome-wide) and
 becomes more informative as the number of CVs with the annotation
-present (=1) increases in that specific combination of simulated loci.
+increases in that specific combination of simulated loci.
 
 ------------------------------------------------------------------------
 
@@ -49,30 +47,6 @@ this github repository. The files should be run in the following order:
 
 ------------------------------------------------------------------------
 
-![](README_files/figure-markdown_github/unnamed-chunk-1-1.png)
-
-------------------------------------------------------------------------
-
-![](README_files/figure-markdown_github/unnamed-chunk-2-1.png)
-
-------------------------------------------------------------------------
-
-![](README_files/figure-markdown_github/unnamed-chunk-3-1.png)
-
-------------------------------------------------------------------------
-
-![](README_files/figure-markdown_github/unnamed-chunk-4-1.png)
-
-------------------------------------------------------------------------
-
-#### Quantiles of maximum absolute Z score in the region
-
-------------------------------------------------------------------------
-
-![](README_files/figure-markdown_github/unnamed-chunk-5-1.png)
-
-------------------------------------------------------------------------
-
-![](README_files/figure-markdown_github/unnamed-chunk-6-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-1-1.png)
 
 ------------------------------------------------------------------------
