@@ -13,7 +13,7 @@ tmp <- readRDS("medium.RDS")
 
 h <- tmp$h
 
-nloci <- 100
+nloci <- 8000
 
 for(i in 1:nloci){
   
@@ -23,34 +23,41 @@ for(i in 1:nloci){
   maf <- colMeans(h_cut)
   LD <- tmp$LD[seq(start+1,start+200,1), seq(start+1,start+200,1)]
   
-  beta <- sample(c(log(1.05),log(1.1),log(1.2)), 1) # log OR
-  
   # corrplot(LD, "color", "upper", tl.pos = "n")
   
   freq <- as.data.frame(h_cut+1)
   freq$Probability <- 1/nrow(freq)
   snps <- colnames(freq)[-ncol(freq)]
-  NN <- sample(c(2000,5000,10000),1) # vary N0=N1
   
-  cvtype <- sample(c('friendly','medium','lonely'),1)
+  z0 <- 0
   
-  nfriends <- apply(LD^2>0.5,1,sum)
-  iCV <- switch(cvtype,
-                friendly=sample(which(nfriends>10 & pmin(maf,1-maf)>0.05), 1),
-                medium=sample(which(nfriends<=10 & nfriends>2 & pmin(maf,1-maf)>0.05), 1),
-                lonely=sample(which(nfriends<=2 & pmin(maf,1-maf)>0.05), 1))
-  
-  CV <- snps[iCV]
-  
-  varbeta <- Var.data.cc(maf, N=2*NN, 0.5) # variance of beta
-  
-  z0 = simulated_z_score(N0=NN, # number of controls
-                         N1=NN, # number of cases
-                         snps=snps,
-                         W=CV, # causal variants, subset of snps
-                         gamma.W=beta, # log odds ratios
-                         freq=freq
-  )
+  while(max(abs(z0))<5){ # ensure all loci reach genome-wide significance
+    
+    beta <- sample(c(log(1.15), log(1.2), log(1.25)),1) # the log OR
+    
+    NN <- sample(c(5000,10000,15000),1)
+    
+    cvtype <- sample(c('medium','lonely','friendly'),1)
+    
+    nfriends <- apply(LD^2>0.5,1,sum)
+    iCV <- switch(cvtype,
+                  friendly=sample(which(nfriends>10 & pmin(maf,1-maf)>0.05), 1),
+                  medium=sample(which(nfriends<=10 & nfriends>2 & pmin(maf,1-maf)>0.05), 1),
+                  lonely=sample(which(nfriends<=2 & pmin(maf,1-maf)>0.05), 1))
+    
+    CV <- snps[iCV]
+    
+    varbeta <- Var.data.cc(maf, N=2*NN, 0.5) # variance of beta
+    
+    z0 = simulated_z_score(N0=NN, # number of controls
+                           N1=NN, # number of cases
+                           snps=snps,
+                           W=CV, # causal variants, subset of snps
+                           gamma.W=beta, # log odds ratios
+                           freq=freq
+    )
+    
+  }
   
   locus_file <- data.frame("ZSCORE" = z0)
   

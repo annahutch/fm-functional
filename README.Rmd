@@ -17,7 +17,7 @@ library(dplyr)
 
 ---
 
-Investigate how useful incorporating functional annotation data is for fine-mapping causal variants using PAINTOR.
+Investigate the utility of incorporating functional annotation data for fine-mapping causal variants using PAINTOR.
 
 ---
 
@@ -25,9 +25,9 @@ Investigate how useful incorporating functional annotation data is for fine-mapp
 
 ---
 
-Z score vectors from GWASs that vary in (i) LD of the region, (ii) OR at the CV (1.05, 1.1, 1.2) and (iii) sample sizes (2K, 5K or 10K cases and controls) are simulated. Corresponding binary annotation vectors are also simulated, whereby the annotation mark is randomly present (=1) in 5% of the SNPs in each simulation. 
+Simulate loci that reach genome-wide significance and corresponding binary annotation vectors, where 5% of the SNPs are randomly allocated the annotation.
 
-PAINTOR is run on various combinations of the simulated loci and the proportion of CVs with the annotation present (=1) is recorded. The annotation is uninformative in combinations where the annotation is present in 5% of the CVs (as this is its proportion genome-wide) and becomes more informative as the number of CVs with the annotation present (=1) increases in that specific combination of simulated loci.
+Run PAINTOR on various combinations of the simulated loci, where the proportion of CVs with the annotation varies across combinations. The annotation is uninformative in combinations where the annotation is present in 5% of the CVs (as this is its proportion genome-wide) and becomes more informative as the number of CVs with the annotation increases in that specific combination of simulated loci.
 
 ---
 
@@ -52,124 +52,27 @@ The code to run this analysis is avaliable in the /code directory of this github
 ---
 
 ```{r warning = FALSE, message=FALSE, comment = FALSE, echo = FALSE, fig.width = 10, fig.height = 7}
-res <- readRDS("res/fullres.RDS")
+x <- readRDS("res/fullres.RDS")
 
-res$OR <- as.factor(res$OR)
-res$NN <- as.factor(res$NN)
-res$prop <- as.factor(res$prop)
+x$prop <- as.factor(x$prop)
 
-example_low <- res[which(res$OR == 1.05 & res$NN == 5000 & res$ld == "low"),]
-example_high <- res[which(res$OR == 1.05 & res$NN == 5000 & res$ld == "high"),]
-example_med <- res[which(res$OR == 1.05 & res$NN == 5000 & res$ld == "medium"),]
+quantiles_low <- within(x[which(x$ld == "low"),], quantile <- as.integer(cut(max_Z, quantile(max_Z, probs=0:5/5), include.lowest=TRUE)))
 
-ex1_low <- ggplot(example_low , aes(x = prop, y = PPs, fill = prop)) + geom_boxplot(notch=TRUE) +labs(y = "PP at CV", x = "Proportion of CVs with annot=1") + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none")+ theme(legend.position = "none") + scale_fill_brewer(palette = 'RdPu') + ggtitle("Low LD") + coord_cartesian(ylim=c(0,0.1))
+quantiles_low_values <- quantile(x[which(x$ld == "low"),"max_Z"], probs=0:5/5)
 
-ex1_high <- ggplot(example_high, aes(x = prop, y = PPs, fill = prop)) + geom_boxplot(notch=TRUE) +labs(y = "PP at CV", x = "Proportion of CVs with annot=1") + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none")+ theme(legend.position = "none") + scale_fill_brewer(palette = 'RdPu') + ggtitle("High LD") + coord_cartesian(ylim=c(0,0.1))
+quantiles_medium <- within(x[which(x$ld == "medium"),], quantile <- as.integer(cut(max_Z, quantile(max_Z, probs=0:5/5), include.lowest=TRUE)))
 
-ex1_med <- ggplot(example_med, aes(x = prop, y = PPs, fill = prop)) + geom_boxplot(notch=TRUE) +labs(y = "PP at CV", x = "Proportion of CVs with annot=1") + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none")+ theme(legend.position = "none") + scale_fill_brewer(palette = 'RdPu') + ggtitle("Medium LD") + coord_cartesian(ylim=c(0,0.1))
+quantiles_medium_values <- quantile(x[which(x$ld == "medium"),"max_Z"], probs=0:5/5)
 
-plot_one <- plot_grid(ex1_low, ex1_med, ex1_high , nrow = 1)
+quantiles_high <- within(x[which(x$ld == "high"),], quantile <- as.integer(cut(max_Z, quantile(max_Z, probs=0:5/5), include.lowest=TRUE)))
 
-title_one <- ggdraw() + draw_label("OR = 1.05, NN = 5000", fontface='bold')
-
-plot_grid(title_one, plot_one, ncol=1, rel_heights=c(0.05, 1)) # rel_heights values control title margins
-```
-
----
-
-```{r warning = FALSE, message=FALSE, comment = FALSE, echo = FALSE, fig.width = 10, fig.height = 7}
-example_low <- res[which(res$OR == 1.2 & res$NN ==2000 & res$ld == "low"),]
-example_high <- res[which(res$OR == 1.2 & res$NN ==2000 & res$ld == "high"),]
-example_med <- res[which(res$OR == 1.2 & res$NN ==2000 & res$ld == "medium"),]
-
-ex1_low <- ggplot(example_low , aes(x = prop, y = PPs, fill = prop)) + geom_boxplot(notch=TRUE) +labs(y = "PP at CV", x = "Proportion of CVs with annot=1") + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none")+ theme(legend.position = "none") + scale_fill_brewer(palette = 'RdPu') + ggtitle("Low LD") + coord_cartesian(ylim=c(0,1))
-
-ex1_high <- ggplot(example_high, aes(x = prop, y = PPs, fill = prop)) + geom_boxplot(notch=TRUE) +labs(y = "PP at CV", x = "Proportion of CVs with annot=1") + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none")+ theme(legend.position = "none") + scale_fill_brewer(palette = 'RdPu') + ggtitle("High LD") + coord_cartesian(ylim=c(0,1))
-
-ex1_med <- ggplot(example_med, aes(x = prop, y = PPs, fill = prop)) + geom_boxplot(notch=TRUE) +labs(y = "PP at CV", x = "Proportion of CVs with annot=1") + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none")+ theme(legend.position = "none") + scale_fill_brewer(palette = 'RdPu') + ggtitle("Medium LD") + coord_cartesian(ylim=c(0,1))
-
-plot_one <- plot_grid(ex1_low, ex1_med, ex1_high , nrow = 1)
-
-title_one <- ggdraw() + draw_label("OR = 1.2, NN = 2000", fontface='bold')
-
-plot_grid(title_one, plot_one, ncol=1, rel_heights=c(0.05, 1)) # rel_heights values control title margins
-```
-
----
-
-```{r warning = FALSE, message=FALSE, comment = FALSE, echo = FALSE, fig.width = 10, fig.height = 7}
-se <- function(x) sd(x)/sqrt(length(x))
-
-new.df_low <- res[which(res$ld=="low"),] %>%
-  group_by(prop, OR, NN) %>%
-  summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
-
-new.df_med <- res[which(res$ld=="medium"),] %>%
-  group_by(prop, OR, NN) %>%
-  summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
-
-new.df_high <- res[which(res$ld=="high"),] %>%
-  group_by(prop, OR, NN) %>%
-  summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
-
-median_low <- ggplot(new.df_low, aes(x = prop, y = PP_median, col = OR, linetype = NN, group = interaction(OR,NN)))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD")+ theme(legend.position = "none")+ ylab("Median PP at CV")
-
-median_med <- ggplot(new.df_med, aes(x = prop, y = PP_median, col = OR, linetype = NN, group = interaction(OR,NN)))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD")+ theme(legend.position = "none")+ ylab("")
-
-median_high <- ggplot(new.df_high, aes(x = prop, y = PP_median, col = OR, linetype = NN, group = interaction(OR,NN)))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD") + ylab("")
-
-median_plot <- plot_grid(median_low + coord_cartesian(ylim = c(0,1)), median_med+ coord_cartesian(ylim = c(0,1)), median_high+ coord_cartesian(ylim = c(0,1))+ theme(legend.position = "none"), nrow =1)
-
-legend <- get_legend(
-  # create some space to the left of the legend
-  median_high + theme(legend.box.margin = margin(0, 0, 0, 10))
-)
-
-full_median_plot <- plot_grid(median_plot, legend, rel_widths = c(3, .5))
-full_median_plot
-```
-
----
-
-```{r warning = FALSE, message=FALSE, comment = FALSE, echo = FALSE, fig.width = 10, fig.height = 7}
-mean_low <- ggplot(new.df_low, aes(x = prop, y = PP_mean, col = OR, linetype = NN, group = interaction(OR,NN)))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD")+ theme(legend.position = "none")+ ylab("Mean PP at CV +/- 1.96 * SE")+ 
-  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA)
-
-mean_med <- ggplot(new.df_med, aes(x = prop, y = PP_mean, col = OR, linetype = NN, group = interaction(OR,NN)))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD")+ theme(legend.position = "none")+ ylab("")+ 
-  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA)
-
-mean_high <- ggplot(new.df_high, aes(x = prop, y = PP_mean, col = OR, linetype = NN, group = interaction(OR,NN)))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD") + ylab("")+ 
-  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA)
-
-mean_plot <- plot_grid(mean_low+ coord_cartesian(ylim = c(0,1)), mean_med+ coord_cartesian(ylim = c(0,1)), mean_high+ coord_cartesian(ylim = c(0,1))+ theme(legend.position = "none"), nrow =1)
-
-legend <- get_legend(
-  # create some space to the left of the legend
-  mean_high + theme(legend.box.margin = margin(0, 0, 0, 10))
-)
-
-full_mean_plot <- plot_grid(mean_plot, legend, rel_widths = c(3, .5))
-full_mean_plot
-```
-
----
-
-#### Quantiles of maximum absolute Z score in the region
-
----
-
-```{r warning = FALSE, message=FALSE, comment = FALSE, echo = FALSE, fig.width = 10, fig.height = 7}
-quantiles_high <- within(res[which(res$ld=="high"),], quantile <- as.integer(cut(max_Z, quantile(max_Z, probs=0:5/5), include.lowest=TRUE)))
-
-quantiles_med <- within(res[which(res$ld=="medium"),], quantile <- as.integer(cut(max_Z, quantile(max_Z, probs=0:5/5), include.lowest=TRUE)))
-
-quantiles_low <- within(res[which(res$ld=="low"),], quantile <- as.integer(cut(max_Z, quantile(max_Z, probs=0:5/5), include.lowest=TRUE)))
+quantiles_high_values <- quantile(x[which(x$ld == "high"),"max_Z"], probs=0:5/5)
 
 new.df_low <- quantiles_low %>%
   group_by(prop, quantile) %>%
   summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
 
-new.df_med <- quantiles_med %>%
+new.df_medium <- quantiles_medium %>%
   group_by(prop, quantile) %>%
   summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
 
@@ -177,46 +80,32 @@ new.df_high <- quantiles_high %>%
   group_by(prop, quantile) %>%
   summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
 
-new.df_low$quantile <- as.factor(new.df_low$quantile)
-new.df_med$quantile <- as.factor(new.df_med$quantile)
-new.df_high$quantile <- as.factor(new.df_high$quantile)
+new.df_low$Quantile <- as.factor(new.df_low$quantile)
+new.df_medium$Quantile <- as.factor(new.df_medium$quantile)
+new.df_high$Quantile <- as.factor(new.df_high$quantile)
 
-high_median <- ggplot(new.df_high, aes(x = prop, y = PP_median, col = quantile, group = quantile))+geom_line() + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD") + ylab("")+ theme(legend.position = "none")
+low_mean <- ggplot(new.df_low, aes(x = prop, y = PP_mean, col = Quantile, group = quantile))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD")+ ylab("Mean PP at CV +/- 1.96 * SE")+ theme(legend.position = "none")+ 
+  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation")
 
-low_median <- ggplot(new.df_low, aes(x = prop, y = PP_median, col = quantile, group = quantile))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD")+ ylab("Median PP at CV")+ theme(legend.position = "none")
+medium_mean <- ggplot(new.df_medium, aes(x = prop, y = PP_mean, col = Quantile, group = quantile))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD")+ ylab("")+ 
+  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation") + scale_colour_discrete(name = "Max abs Z score\nquantile", labels = c("0 - 0.2", "0.2 - 0.4", "0.4 - 0.6",  "0.6 - 0.8",  "0.8 - 1"))
 
-med_median <- ggplot(new.df_med, aes(x = prop, y = PP_median, col = quantile, group = quantile))+geom_line() + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD")+ ylab("")
+high_mean <- ggplot(new.df_high, aes(x = prop, y = PP_mean, col = Quantile, group = quantile))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD")+ ylab("")+ theme(legend.position = "none")+ 
+  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation")
 
-quantile_plot <- plot_grid(low_median + coord_cartesian(ylim = c(0,1)), med_median + theme(legend.position = "none")+ coord_cartesian(ylim = c(0,1)), high_median+ coord_cartesian(ylim = c(0,1)), nrow = 1)
-
-legend <- get_legend(
-  # create some space to the left of the legend
-  med_median + theme(legend.box.margin = margin(0, 0, 0, 10))
-)
-
-plot_grid(quantile_plot, legend, rel_widths = c(3, .5))
-```
-
----
-
-```{r warning = FALSE, message=FALSE, comment = FALSE, echo = FALSE, fig.width = 10, fig.height = 7}
-high_mean <- ggplot(new.df_high, aes(x = prop, y = PP_mean, col = quantile, group = quantile))+geom_line() + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD") + ylab("")+ theme(legend.position = "none")+ 
-  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA)
-
-low_mean <- ggplot(new.df_low, aes(x = prop, y = PP_mean, col = quantile, group = quantile))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD")+ ylab("Mean PP at CV +/- 1.96 * SE")+ theme(legend.position = "none")+ 
-  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA)
-
-med_mean <- ggplot(new.df_med, aes(x = prop, y = PP_mean, col = quantile, group = quantile))+geom_line() + theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD")+ ylab("")+ 
-  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA)
-
-quantile_plot <- plot_grid(low_mean + coord_cartesian(ylim = c(0,1)), med_mean + theme(legend.position = "none")+ coord_cartesian(ylim = c(0,1)), high_mean+ coord_cartesian(ylim = c(0,1)), nrow = 1)
+quantile_plot <- plot_grid(low_mean + coord_cartesian(ylim = c(0,1)), medium_mean + theme(legend.position = "none")+ coord_cartesian(ylim = c(0,1)), high_mean+ coord_cartesian(ylim = c(0,1)), nrow = 1)
 
 legend <- get_legend(
   # create some space to the left of the legend
-  med_mean + theme(legend.box.margin = margin(0, 0, 0, 10))
+  medium_mean + theme(legend.box.margin = margin(0, 0, 0, 10))
 )
 
-plot_grid(quantile_plot, legend, rel_widths = c(3, .5))
+final <- plot_grid(quantile_plot, legend, rel_widths = c(3, .5))
+
+final
+
+# ggsave("functional-annots.png",plot=final,height=8,width=12)
+
 ```
 
 ---

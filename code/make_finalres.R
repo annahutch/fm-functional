@@ -30,14 +30,21 @@ OR <- rep(NA, length(RES))
 NN <- rep(NA, length(RES))
 max_Z <- rep(NA, length(RES))
 
+missing <- which(!seq(1,3000,1) %in% iCVs$locus)
+
 for(i in 1:length(RES)){
-  PPs[i] <- RES[[i]]$Posterior_Prob[iCVs[which(iCVs$locus==locus[i]),]$iCV]
-  ranks[i] <- rank(-RES[[i]]$Posterior_Prob)[iCVs[which(iCVs$locus==locus[i]),]$iCV]
-  ld[i] <- iCVs[which(iCVs$locus==locus[i]),]$ld
-  OR[i] <- iCVs[which(iCVs$locus==locus[i]),]$OR
-  NN[i] <- iCVs[which(iCVs$locus==locus[i]),]$NN
-  max_Z[i] <- iCVs[which(iCVs$locus==locus[i]),]$max_Z
+  if(locus[i] %in% missing){
+    next
+  } else {
+    PPs[i] <- RES[[i]]$Posterior_Prob[iCVs[which(iCVs$locus==locus[i]),]$iCV]
+    ranks[i] <- rank(-RES[[i]]$Posterior_Prob)[iCVs[which(iCVs$locus==locus[i]),]$iCV]
+    ld[i] <- iCVs[which(iCVs$locus==locus[i]),]$ld
+    OR[i] <- iCVs[which(iCVs$locus==locus[i]),]$OR
+    NN[i] <- iCVs[which(iCVs$locus==locus[i]),]$NN
+    max_Z[i] <- iCVs[which(iCVs$locus==locus[i]),]$max_Z
+  }
 } 
+
 
 res <- data.frame(locus, prop, PPs, ranks, ld, OR, NN, max_Z)
 
