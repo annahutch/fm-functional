@@ -1,7 +1,7 @@
 ---
 title: "README"
 author: "Anna Hutchinson"
-output: html_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
@@ -56,44 +56,31 @@ x <- readRDS("res/fullres.RDS")
 
 x$prop <- as.factor(x$prop)
 
-se <- function(x) sd(x)/sqrt(length(x))
+x <- cbind(x, bin = cut(x$max_Z, quantile(x$max_Z, probs=0:5/5), include.lowest=TRUE))
 
-quantiles_low <- within(x[which(x$ld == "low"),], quantile <- as.integer(cut(max_Z, quantile(max_Z, probs=0:5/5), include.lowest=TRUE)))
+quantiles_low <- x[which(x$ld == "low"),]
 
-quantiles_low_values <- quantile(x[which(x$ld == "low"),"max_Z"], probs=0:5/5)
+quantiles_medium <- x[which(x$ld == "medium"),]
 
-quantiles_medium <- within(x[which(x$ld == "medium"),], quantile <- as.integer(cut(max_Z, quantile(max_Z, probs=0:5/5), include.lowest=TRUE)))
-
-quantiles_medium_values <- quantile(x[which(x$ld == "medium"),"max_Z"], probs=0:5/5)
-
-quantiles_high <- within(x[which(x$ld == "high"),], quantile <- as.integer(cut(max_Z, quantile(max_Z, probs=0:5/5), include.lowest=TRUE)))
-
-quantiles_high_values <- quantile(x[which(x$ld == "high"),"max_Z"], probs=0:5/5)
+quantiles_high <- x[which(x$ld == "high"),]
 
 new.df_low <- quantiles_low %>%
-  group_by(prop, quantile) %>%
-  summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
+  group_by(prop, bin) %>%
+  summarise(PP_mean = mean(PPs))
 
 new.df_medium <- quantiles_medium %>%
-  group_by(prop, quantile) %>%
-  summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
+  group_by(prop, bin) %>%
+  summarise(PP_mean = mean(PPs))
 
 new.df_high <- quantiles_high %>%
-  group_by(prop, quantile) %>%
-  summarise(PP_mean = mean(PPs), PP_median = median(PPs), se = se(PPs))
+  group_by(prop, bin) %>%
+  summarise(PP_mean = mean(PPs))
 
-new.df_low$Quantile <- as.factor(new.df_low$quantile)
-new.df_medium$Quantile <- as.factor(new.df_medium$quantile)
-new.df_high$Quantile <- as.factor(new.df_high$quantile)
+low_mean <- ggplot(new.df_low, aes(x = prop, y = PP_mean, col = bin, group = bin))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD")+ ylab("Mean PP at CV")+ theme(legend.position = "none") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation")
 
-low_mean <- ggplot(new.df_low, aes(x = prop, y = PP_mean, col = Quantile, group = quantile))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD")+ ylab("Mean PP at CV +/- 1.96 * SE")+ theme(legend.position = "none")+ 
-  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation")
+medium_mean <- ggplot(new.df_medium, aes(x = prop, y = PP_mean, col = bin, group = bin))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5), legend.text=element_text(size=11.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD")+ ylab("") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation") + scale_colour_discrete(name = "Maximum absolute\nZ score")
 
-medium_mean <- ggplot(new.df_medium, aes(x = prop, y = PP_mean, col = Quantile, group = quantile))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD")+ ylab("")+ 
-  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation") + scale_colour_discrete(name = "Max abs Z score\nquantile", labels = c("0 - 0.2", "0.2 - 0.4", "0.4 - 0.6",  "0.6 - 0.8",  "0.8 - 1"))
-
-high_mean <- ggplot(new.df_high, aes(x = prop, y = PP_mean, col = Quantile, group = quantile))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD")+ ylab("")+ theme(legend.position = "none")+ 
-  geom_ribbon(aes(ymin=PP_mean-1.96*se, ymax=PP_mean+1.96*se), alpha=0.1, colour = NA) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation")
+high_mean <- ggplot(new.df_high, aes(x = prop, y = PP_mean, col = bin, group = bin))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD")+ ylab("")+ theme(legend.position = "none") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation")
 
 quantile_plot <- plot_grid(low_mean + coord_cartesian(ylim = c(0,1)), medium_mean + theme(legend.position = "none")+ coord_cartesian(ylim = c(0,1)), high_mean+ coord_cartesian(ylim = c(0,1)), nrow = 1)
 
@@ -107,7 +94,6 @@ final <- plot_grid(quantile_plot, legend, rel_widths = c(3, .5))
 final
 
 # ggsave("functional-annots.png",plot=final,height=8,width=12)
-
 ```
 
 ---
