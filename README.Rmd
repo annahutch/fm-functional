@@ -56,44 +56,45 @@ x <- readRDS("res/fullres.RDS")
 
 x$prop <- as.factor(x$prop)
 
-x <- cbind(x, bin = cut(x$max_Z, quantile(x$max_Z, probs=0:5/5), include.lowest=TRUE))
+x <- cbind(x, bin = cut(x$max_Z, quantile(x$max_Z, probs = 0:5/5), include.lowest = TRUE), size = x$cs_size)
 
-quantiles_low <- x[which(x$ld == "low"),]
+quantiles_low <- x[which(x$ld == "low"), ]
 
-quantiles_medium <- x[which(x$ld == "medium"),]
+quantiles_medium <- x[which(x$ld == "medium"), ]
 
-quantiles_high <- x[which(x$ld == "high"),]
+quantiles_high <- x[which(x$ld == "high"), ]
 
-new.df_low <- quantiles_low %>%
-  group_by(prop, bin) %>%
-  summarise(PP_mean = mean(PPs))
+new.df_low <- quantiles_low %>% group_by(prop, bin) %>% summarise(PP_mean = mean(PPs), mean_size = mean(size))
 
-new.df_medium <- quantiles_medium %>%
-  group_by(prop, bin) %>%
-  summarise(PP_mean = mean(PPs))
+new.df_medium <- quantiles_medium %>% group_by(prop, bin) %>% summarise(PP_mean = mean(PPs), mean_size = mean(size))
 
-new.df_high <- quantiles_high %>%
-  group_by(prop, bin) %>%
-  summarise(PP_mean = mean(PPs))
+new.df_high <- quantiles_high %>% group_by(prop, bin) %>% summarise(PP_mean = mean(PPs), mean_size = mean(size))
 
-low_mean <- ggplot(new.df_low, aes(x = prop, y = PP_mean, col = bin, group = bin))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD")+ ylab("Mean PP at CV")+ theme(legend.position = "none") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation")
+low_mean_pp <- ggplot(new.df_low, aes(x = prop, y = PP_mean, col = bin, group = bin)) + geom_line() + theme_cowplot(12) + theme(plot.title = element_text(color = "black", face = "bold", size = 12, hjust = 0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD") + ylab("Mean PP at CV") + theme(legend.position = "none") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation")
 
-medium_mean <- ggplot(new.df_medium, aes(x = prop, y = PP_mean, col = bin, group = bin))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5), legend.text=element_text(size=11.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD")+ ylab("") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation") + scale_colour_discrete(name = "Maximum absolute\nZ score")
+medium_mean_pp <- ggplot(new.df_medium, aes(x = prop, y = PP_mean, col = bin, group = bin)) + geom_line() + theme_cowplot(12) + theme(plot.title = element_text(color = "black", face = "bold", size = 12, hjust = 0.5), legend.text = element_text(size = 11.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD") + ylab("") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation") + scale_colour_discrete(name = "Maximum absolute\nZ score")
 
-high_mean <- ggplot(new.df_high, aes(x = prop, y = PP_mean, col = bin, group = bin))+geom_line()+ theme_cowplot(12) +theme(plot.title = element_text(color="black", face="bold", size = 12, hjust=0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD")+ ylab("")+ theme(legend.position = "none") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation")
+high_mean_pp <- ggplot(new.df_high, aes(x = prop, y = PP_mean, col = bin, group = bin)) + geom_line() + theme_cowplot(12) + theme(plot.title = element_text(color = "black", face = "bold", size = 12, hjust = 0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD") + ylab("") + theme(legend.position = "none") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation")
 
-quantile_plot <- plot_grid(low_mean + coord_cartesian(ylim = c(0,1)), medium_mean + theme(legend.position = "none")+ coord_cartesian(ylim = c(0,1)), high_mean+ coord_cartesian(ylim = c(0,1)), nrow = 1)
+low_mean_size <- ggplot(new.df_low, aes(x = prop, y = mean_size, col = bin, group = bin)) + geom_line() + theme_cowplot(12) + theme(plot.title = element_text(color = "black", face = "bold", size = 12, hjust = 0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Low LD") + ylab("Mean size of credible set") + theme(legend.position = "none") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation")
 
-legend <- get_legend(
-  # create some space to the left of the legend
-  medium_mean + theme(legend.box.margin = margin(0, 0, 0, 10))
-)
+medium_mean_size <- ggplot(new.df_medium, aes(x = prop, y = mean_size, col = bin, group = bin)) + geom_line() + theme_cowplot(12) + theme(plot.title = element_text(color = "black", face = "bold", size = 12, hjust = 0.5), legend.text = element_text(size = 11.5)) + background_grid(major = "xy", minor = "none") + ggtitle("Medium LD") + ylab("") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation") + scale_colour_discrete(name = "Maximum absolute\nZ score")
 
-final <- plot_grid(quantile_plot, legend, rel_widths = c(3, .5))
+high_mean_size <- ggplot(new.df_high, aes(x = prop, y = mean_size, col = bin, group = bin)) + geom_line() + theme_cowplot(12) + theme(plot.title = element_text(color = "black", face = "bold", size = 12, hjust = 0.5)) + background_grid(major = "xy", minor = "none") + ggtitle("High LD") + ylab("") + theme(legend.position = "none") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab("Proportion of CVs with annotation")
+
+panel_A <- plot_grid(low_mean_pp + coord_cartesian(ylim = c(0, 1)) + xlab(""), medium_mean_pp + theme(legend.position = "none") + xlab("") + coord_cartesian(ylim = c(0,1)), high_mean_pp + xlab("") + coord_cartesian(ylim = c(0, 1)), nrow = 1)
+
+panel_B <- plot_grid(low_mean_size + coord_cartesian(ylim = c(1, 10)), medium_mean_size + theme(legend.position = "none") + coord_cartesian(ylim = c(1,10)), high_mean_size + coord_cartesian(ylim = c(1, 10)), nrow = 1)
+
+full_plot <- plot_grid(panel_A, panel_B, nrow = 2, labels = c("A", "B"))
+
+legend <- get_legend(medium_mean_pp + theme(legend.box.margin = margin(0, 0, 0, 10)))
+
+final <- plot_grid(full_plot, legend, rel_widths = c(3, 0.6))
 
 final
 
-# ggsave("functional-annots.png",plot=final,height=8,width=12)
+# ggsave("functional-annots.png",plot=final,height=9,width=13)
 ```
 
 ---

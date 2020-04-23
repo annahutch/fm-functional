@@ -23,6 +23,17 @@ prop <- as.numeric(paste0(unlist(lapply(matches, function(x) x[2])),".",unlist(l
 
 RES <- lapply(files_final, function(x) read.table(x, header = TRUE))
 
+credset <- function(pp, thr) {
+  
+  cumpp = cumsum(pp[order(pp, decreasing = TRUE)])  # cum sums of ordered pps
+  
+  wh = which(cumpp > thr)[1]  # how many needed to exceed thr
+  
+  names(wh) = NULL
+  
+  return(wh)
+}
+
 PPs <- rep(NA, length(RES))
 ranks <- rep(NA, length(RES))
 ld <- rep(NA, length(RES))
@@ -45,8 +56,9 @@ for(i in 1:length(RES)){
   }
 } 
 
+cs_size <- lapply(RES, function(x) credset(x$Posterior_Prob, thr = 0.95)) %>% unlist
 
-res <- data.frame(locus, prop, PPs, ranks, ld, OR, NN, max_Z)
+res <- data.frame(locus, prop, PPs, ranks, ld, OR, NN, max_Z, cs_size)
 
 # res_final <- res[-which(res$PPs==1 & res$ranks != 1),]
 
